@@ -1,11 +1,11 @@
 # ScribbleMD
 
+[![Install](https://img.shields.io/badge/Install%20from%20Marketplace-blue?style=for-the-badge&logo=vscode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=Nijikajia.scribbleMD)
 > 在 Markdown 预览之上随手画两笔，墨迹还能跟着文件一起走。
 
 [![GitHub](https://img.shields.io/badge/Github-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nijika-jia/ScribbleMD)
 [![made with typescript](https://img.shields.io/badge/made%20with-typescript-3178c6?logo=typescript&logoColor=white&style=for-the-badge&format=png)](https://www.typescriptlang.org/)
 [![built with love](https://img.shields.io/badge/built%20with-love-ff69b4?style=for-the-badge&format=png)](https://github.com/Nijika-jia/ScribbleMD)
-[![Install](https://img.shields.io/badge/Install%20from%20Marketplace-blue?style=for-the-badge&logo=vscode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=Nijikajia.scribbleMD)
 [![VS Code Engine](https://img.shields.io/badge/VS%20Code-1.74%2B-0078D4?style=for-the-badge&logo=visualstudiocode&logoColor=white&format=png)](https://code.visualstudio.com/)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge&format=png)](./package.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&format=png)](./LICENSE)
