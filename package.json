@@ -1,0 +1,75 @@
+{
+  "name": "scribble-md",
+  "displayName": "ScribbleMD - 在 Markdown 上随手画",
+  "description": "在 Markdown 之上随手涂鸦标注，墨迹持久化到磁盘。学习看文档时不用再切软件，直接在编辑器里画 !!!",
+  "version": "1.0.0",
+  "publisher": "scribblemd",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scribblemd/scribble-md.git"
+  },
+  "homepage": "https://github.com/scribblemd/scribble-md",
+  "bugs": {
+    "url": "https://github.com/scribblemd/scribble-md/issues"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:scribblemd.open"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "scribblemd.open",
+        "title": "随手涂鸦",
+        "category": "ScribbleMD",
+        "icon": "$(edit)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "scribblemd.open",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "scribblemd.open",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "scribblemd.open",
+          "when": "resourceLangId == markdown"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "node ./esbuild.js",
+    "watch": "node ./esbuild.js --watch",
+    "build": "node ./esbuild.js --production",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^13.0.7",
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.74.0",
+    "esbuild": "^0.20.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "markdown-it": "^14.0.0"
+  },
+  "icon": "icon.png"
+}

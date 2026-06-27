@@ -1,0 +1,19 @@
+node_modules/
+dist/
+*.vsix
+.vscode-test/
+package-lock.json
+
+# vsce 打包临时目录
+scribble-md-*/
+
+# .vscode 本地配置（保留 launch.json 和 settings.json 可选）
+.vscode/
+!.vscode/launch.json
+!.vscode/settings.json
+
+# 演示 GIF（README 用 GitHub raw URL，不提交）
+media/demo.gif
+
+# 源映射
+*.map

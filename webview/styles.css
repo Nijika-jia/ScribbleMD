@@ -1,0 +1,384 @@
+/* ScribbleMD Webview 样式：适配 VSCode 明暗主题。 */
+
+:root {
+  --ink-bg: var(--vscode-editor-background);
+  --ink-fg: var(--vscode-editor-foreground);
+  --ink-muted: var(--vscode-descriptionForeground);
+  --ink-border: var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
+  --ink-toolbar-bg: var(--vscode-toolbar-background, var(--ink-bg));
+  --ink-btn-bg: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.15));
+  --ink-btn-fg: var(--vscode-button-secondaryForeground, var(--ink-fg));
+  --ink-btn-hover: var(--vscode-button-hoverBackground, rgba(128, 128, 128, 0.25));
+  --ink-active: var(--vscode-button-background, #0e639c);
+  --ink-active-fg: var(--vscode-button-foreground, #fff);
+  --ink-code-bg: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.12));
+  --ink-link: var(--vscode-textLink-foreground, #2980d4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--ink-bg);
+  color: var(--ink-fg);
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: var(--vscode-font-size, 14px);
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ------------------------------ 工具栏 ------------------------------ */
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--ink-toolbar-bg);
+  border-bottom: 1px solid var(--ink-border);
+  user-select: none;
+  flex: 0 0 auto;
+  z-index: 10;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-right: 1px solid var(--ink-border);
+}
+.group:last-of-type {
+  border-right: none;
+}
+
+button {
+  appearance: none;
+  border: 1px solid transparent;
+  background: var(--ink-btn-bg);
+  color: var(--ink-btn-fg);
+  padding: 4px 8px;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition: background 0.12s ease;
+}
+button:hover {
+  background: var(--ink-btn-hover);
+}
+button.is-active {
+  background: var(--ink-active);
+  color: var(--ink-active-fg);
+  border-color: var(--ink-active);
+}
+
+/* 图标占位 <i class="icon" data-icon="...">：让内联 SVG 撑满按钮。 */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 0;
+}
+.icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* 颜色按钮：圆点 + 取色器图标的组合。 */
+.color-group {
+  position: relative;
+}
+.color-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 4px;
+}
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: #e74c3c; /* 由 JS setColor 覆盖 */
+  box-shadow: 0 0 0 2px var(--ink-btn-bg) inset;
+}
+
+/* 色盘弹出层。 */
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 196px;
+  padding: 10px 12px;
+  background: var(--vscode-quickInput-background, var(--ink-bg));
+  color: var(--ink-fg);
+  border: 1px solid var(--ink-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.popover.is-hidden {
+  display: none;
+}
+.pop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pop-label {
+  font-size: 11px;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+#color-input {
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--ink-border);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+#color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+#color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+/* 预设色块网格。 */
+.presets {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.preset {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 6px;
+  background-clip: padding-box;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.preset:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+/* 白色预设需要一个可见边框（已经在 .preset 上有了），这里再强调一下。 */
+.preset[style*='#ffffff'],
+.preset[style*='#FFFFFF'] {
+  border-color: rgba(128, 128, 128, 0.7);
+}
+
+/* 粗细滑块组。 */
+.width-label {
+  font-size: 11px;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+#width {
+  width: 90px;
+  accent-color: var(--ink-active);
+}
+#width-val {
+  min-width: 28px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* ------------------------------ 正文区 ------------------------------ */
+
+#scroll {
+  flex: 1 1 auto;
+  overflow: auto;
+  position: relative;
+  padding: 24px 32px 96px;
+}
+
+#content {
+  position: relative;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+#markdown {
+  color: var(--ink-fg);
+  line-height: 1.7;
+  word-wrap: break-word;
+  /* 画图模式下禁止选中正文文字：避免鼠标从画布外划入时把字也选中。 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 平移模式放开文字选择，方便复制。 */
+body[data-mode='hand'] #markdown {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#ink-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  touch-action: none;
+  pointer-events: auto;
+}
+
+body[data-mode='hand'] #ink-canvas {
+  pointer-events: none;
+  cursor: grab;
+}
+
+/* 鼠标预览光标：跟随指针显示当前画笔状态。 */
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+/* ---------------------------- Markdown 排版 ---------------------------- */
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin: 1.4em 0 0.6em;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.markdown-body h1 {
+  font-size: 1.8em;
+  border-bottom: 1px solid var(--ink-border);
+  padding-bottom: 0.3em;
+}
+.markdown-body h2 {
+  font-size: 1.4em;
+  border-bottom: 1px solid var(--ink-border);
+  padding-bottom: 0.3em;
+}
+.markdown-body h3 {
+  font-size: 1.15em;
+}
+.markdown-body p {
+  margin: 0.6em 0;
+}
+.markdown-body a {
+  color: var(--ink-link);
+  text-decoration: none;
+}
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+.markdown-body code {
+  font-family: var(--vscode-editor-font-family, ui-monospace, monospace);
+  font-size: 0.9em;
+  background: var(--ink-code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+}
+.markdown-body pre {
+  background: var(--ink-code-bg);
+  padding: 12px 14px;
+  border-radius: 6px;
+  overflow: auto;
+}
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+.markdown-body blockquote {
+  margin: 0.8em 0;
+  padding: 0.2em 1em;
+  border-left: 4px solid var(--ink-border);
+  color: var(--ink-muted);
+}
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.6em;
+  margin: 0.6em 0;
+}
+.markdown-body li {
+  margin: 0.2em 0;
+}
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 0.8em 0;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--ink-border);
+  padding: 6px 10px;
+}
+.markdown-body th {
+  background: var(--ink-code-bg);
+  font-weight: 600;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--ink-border);
+  margin: 1.4em 0;
+}
+
+/* ------------------------------ 提示 ------------------------------ */
+
+.hint {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink-active);
+  color: var(--ink-active-fg);
+  padding: 6px 14px;
+  border-radius: 14px;
+  font-size: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.3s ease;
+}
+.hint.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
