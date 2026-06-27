@@ -8,12 +8,12 @@
 [![uses badges](https://img.shields.io/badge/uses%20badges-blueviolet?style=for-the-badge&format=png)](https://forthebadge.com)
 [![powered by electricity](https://img.shields.io/badge/powered%20by-electricity-yellow?style=for-the-badge&format=png)](https://forthebadge.com)
 [![works on my machine](https://img.shields.io/badge/works%20on%20my%20machine-success?style=for-the-badge&format=png)](https://forthebadge.com)
-[![GitHub](https://img.shields.io/github/stars/scribblemd/scribble-md?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nijika-jia/ScribbleMD)
+[![GitHub](https://img.shields.io/github/stars/ScribbleMD?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nijika-jia/ScribbleMD)
 
 [![VS Code Engine](https://img.shields.io/badge/VS%20Code-1.74%2B-0078D4?logo=visualstudiocode&logoColor=white&format=png)](https://code.visualstudio.com/)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue?format=png)](./package.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?format=png)](./LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?format=png)](https://github.com/scribblemd/scribble-md/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?format=png)](https://github.com/Nijika-jia/ScribbleMD/issues)
 
 ScribbleMD 给你在 VS Code 里看 Markdown 时随手画两笔的能力。打开任意 `.md` 文件，点一下右上角的铅笔按钮，正文被渲染成一张冻结的快照，上面盖一层透明画布——钢笔、水彩笔、橡皮、色盘、撤销重做全都就位。画完的墨迹会自动存到 workspace 根目录的 `.scribblemd/` 文件夹下，按源文件相对路径组织，下次打开还在原来的位置。
 
