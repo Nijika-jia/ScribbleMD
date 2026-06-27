@@ -7,7 +7,7 @@
 [![built with love](https://img.shields.io/badge/built%20with-love-ff69b4?style=for-the-badge&format=png)](https://github.com/Nijika-jia/ScribbleMD)
 [![Install](https://img.shields.io/badge/Install%20from%20Marketplace-blue?style=for-the-badge&logo=vscode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=Nijikajia.scribbleMD)
 [![VS Code Engine](https://img.shields.io/badge/VS%20Code-1.74%2B-0078D4?style=for-the-badge&logo=visualstudiocode&logoColor=white&format=png)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge&format=png)](./package.json)
+[![Version](https://img.shields.io/badge/version-1.0.2-blue?style=for-the-badge&format=png)](./package.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&format=png)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge&format=png)](https://github.com/Nijika-jia/ScribbleMD/issues)
 

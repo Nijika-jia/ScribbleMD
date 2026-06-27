@@ -76,6 +76,12 @@ export class InkEditorProvider implements vscode.Disposable {
 
     panel.webview.html = this.getHtml(panel.webview);
 
+    // 标签页图标：指向扩展包内的 RiEdit2Fill.png（内嵌铅笔图标）。
+    panel.iconPath = vscode.Uri.joinPath(
+      this.context.extensionUri,
+      'RiEdit2Fill.png',
+    );
+
     // 初始数据：当前 MD 内容 + 已有墨迹。
     const md = await this.readMarkdown(uri);
     const ink = await this.loadInk(uri);

@@ -87,6 +87,7 @@ const colorDot = $('#color-dot')!;
 const presetsEl = $('#presets')!;
 const cursorEl = $('#cursor')!;
 const toolbarEl = $('#toolbar')!;
+const scrollEl = $('#scroll')!;
 
 /* --------------------------- Markdown 渲染 --------------------------- */
 
@@ -112,15 +113,25 @@ function renderMarkdown(text: string): void {
 
 /* --------------------------- Canvas 尺寸 ---------------------------- */
 
+// 浏览器对 canvas 像素尺寸有上限（Chrome 约 16384 单边 / 268M 总像素），
+// 长文档会触发上限导致画布变白甚至 webview 崩溃。
+// 解决：canvas 只占视口高度，滚动时通过坐标平移重绘对应区域的墨迹。
+const MAX_CANVAS_DIM = 8192;
+
+// canvas 顶部对应的文档 Y（用于坐标转换）。由 redraw 在滚动时更新。
+let canvasTopY = 0;
+
 function resizeCanvas(): void {
   const dpr = window.devicePixelRatio || 1;
   const rect = contentEl.getBoundingClientRect();
-  // canvas 精确贴合正文：宽取内容盒，高取正文滚动高度（空内容时回落到内容盒高）。
-  const height = markdownEl.scrollHeight || rect.height;
+  // canvas 高度取 2 倍视口高度，上下各留半屏余量，
+  // 滚动时边缘笔画不会被立即裁掉，避免"上面被吞"的视觉问题。
+  const baseHeight = scrollEl.clientHeight || rect.height;
+  const viewportHeight = Math.min(baseHeight * 2, MAX_CANVAS_DIM / dpr);
   canvas.style.width = `${rect.width}px`;
-  canvas.style.height = `${height}px`;
-  canvas.width = Math.round(rect.width * dpr);
-  canvas.height = Math.round(height * dpr);
+  canvas.style.height = `${viewportHeight}px`;
+  canvas.width = Math.min(Math.round(rect.width * dpr), MAX_CANVAS_DIM);
+  canvas.height = Math.min(Math.round(viewportHeight * dpr), MAX_CANVAS_DIM);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   redraw();
 }
@@ -145,18 +156,18 @@ function styleStroke(s: InkStroke): void {
   }
 }
 
-function drawStroke(s: InkStroke): void {
+function drawStroke(s: InkStroke, offsetY: number): void {
   if (s.points.length === 0) return;
   styleStroke(s);
   ctx.beginPath();
   const p0 = s.points[0];
-  ctx.moveTo(p0.x, p0.y);
+  ctx.moveTo(p0.x, p0.y - offsetY);
   if (s.points.length === 1) {
     // 单点 → 画一个小圆点
-    ctx.lineTo(p0.x + 0.01, p0.y + 0.01);
+    ctx.lineTo(p0.x + 0.01, p0.y - offsetY + 0.01);
   } else {
     for (let i = 1; i < s.points.length; i++) {
-      ctx.lineTo(s.points[i].x, s.points[i].y);
+      ctx.lineTo(s.points[i].x, s.points[i].y - offsetY);
     }
   }
   ctx.stroke();
@@ -164,12 +175,28 @@ function drawStroke(s: InkStroke): void {
   ctx.globalCompositeOperation = 'source-over';
 }
 
+/** 笔画是否与当前视口区域相交（含 margin 容差）。 */
+function strokeInView(s: InkStroke, top: number, bottom: number): boolean {
+  const margin = Math.max(20, s.width);
+  return s.points.some(
+    (p) => p.y >= top - margin && p.y <= bottom + margin,
+  );
+}
+
 function redraw(): void {
+  const scrollTop = scrollEl.scrollTop;
+  const viewportH = scrollEl.clientHeight;
+  // canvas 顶部往上偏移半屏（留余量），但不超过文档顶部。
+  // 这样滚动时上方边缘的笔画仍落在 canvas 内，不会被裁掉。
+  canvasTopY = Math.max(0, scrollTop - viewportH / 2);
+  canvas.style.transform = `translateY(${canvasTopY}px)`;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // 先画普通笔，再画高亮（高亮在底层更自然）—— 实际上高亮应在普通笔之下：
-  // 这里先画高亮再画钢笔，让钢笔盖在高亮之上。
-  strokes.filter((s) => s.highlight).forEach(drawStroke);
-  strokes.filter((s) => !s.highlight).forEach(drawStroke);
+  // 视口范围（用于过滤要画的笔画）。
+  const viewportTop = scrollTop;
+  const viewportBottom = scrollTop + viewportH;
+  const visible = (s: InkStroke) => strokeInView(s, viewportTop, viewportBottom);
+  strokes.filter((s) => s.highlight && visible(s)).forEach((s) => drawStroke(s, canvasTopY));
+  strokes.filter((s) => !s.highlight && visible(s)).forEach((s) => drawStroke(s, canvasTopY));
 }
 
 /* --------------------------- 坐标 & 输入 --------------------------- */
@@ -178,7 +205,9 @@ function toLocal(e: PointerEvent): InkPoint {
   const rect = canvas.getBoundingClientRect();
   return {
     x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
+    // canvas 顶部对应的文档 Y 是 canvasTopY（不是 scrollTop，因为 canvas 顶部往上偏移了半屏）。
+    // clientY - rect.top 是 canvas 内 Y，加 canvasTopY 得到文档绝对 Y。
+    y: e.clientY - rect.top + canvasTopY,
     p: e.pressure > 0 ? e.pressure : 0.5,
   };
 }
@@ -225,7 +254,7 @@ canvas.addEventListener('pointerdown', (e) => {
   };
   strokes.push(current);
   redoStack = []; // 新笔画后清空重做栈
-  drawStroke(current); // 单点也能落墨
+  drawStroke(current, canvasTopY);
 });
 
 canvas.addEventListener('pointermove', (e) => {
@@ -515,6 +544,9 @@ window.addEventListener('resize', resizeCanvas);
 const ro = new ResizeObserver(() => resizeCanvas());
 ro.observe(contentEl);
 ro.observe(markdownEl);
+
+// 滚动时重绘墨迹（视口平移，让笔画跟随对应内容）。
+scrollEl.addEventListener('scroll', redraw);
 
 // 初始一次（即便没有消息也把 canvas 准备好）。
 resizeCanvas();
