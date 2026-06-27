@@ -8,10 +8,10 @@
 [![uses badges](https://img.shields.io/badge/uses%20badges-blueviolet?style=for-the-badge&format=png)](https://forthebadge.com)
 [![powered by electricity](https://img.shields.io/badge/powered%20by-electricity-yellow?style=for-the-badge&format=png)](https://forthebadge.com)
 [![works on my machine](https://img.shields.io/badge/works%20on%20my%20machine-success?style=for-the-badge&format=png)](https://forthebadge.com)
-[![GitHub](https://img.shields.io/github/stars/scribblemd/scribble-md?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nijika_jia/scribble-md)
+[![GitHub](https://img.shields.io/github/stars/scribblemd/scribble-md?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nijika-jia/ScribbleMD)
 
 [![VS Code Engine](https://img.shields.io/badge/VS%20Code-1.74%2B-0078D4?logo=visualstudiocode&logoColor=white&format=png)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue?format=png)](./package.json)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?format=png)](./package.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?format=png)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?format=png)](https://github.com/scribblemd/scribble-md/issues)
 
@@ -29,7 +29,7 @@ ScribbleMD 给你在 VS Code 里看 Markdown 时随手画两笔的能力。打�
 - 自动持久化：防抖 350ms 落盘，不会因为忘存而丢画
 - 明暗主题自适应：所有颜色走 VSCode 主题变量
 
-![demo](https://github.com/Nijika-jia/scribble-md/raw/main/media/demo.gif)
+![demo](https://github.com/Nijika-jia/ScribbleMD/blob/main/media/demo.gif)
 ## 快速开始
 
 1. 在扩展市场搜索 `ScribbleMD`，或用 [VSIX](#本地打包) 安装
