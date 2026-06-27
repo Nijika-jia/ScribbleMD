@@ -100,7 +100,7 @@ npx vsce package
 装 vsix：
 
 ```bash
-code --install-extension scribble-md-0.1.0.vsix
+code --install-extension scribble-md-1.0.0.vsix
 ```
 
 ## 技术细节
