@@ -217,17 +217,96 @@ button.is-active {
 
 /* ------------------------------ 正文区 ------------------------------ */
 
+/* 主区域：左侧大纲浮层 + 右侧内容。 */
+#main-area {
+  flex: 1 1 auto;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+  position: relative; /* 给 #outline 浮层做定位上下文。 */
+}
+
+/* 左侧大纲栏：浮层定位，不挤压 #scroll 宽度，避免内容重排导致笔迹错位。 */
+#outline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 240px;
+  z-index: 5;
+  overflow: auto;
+  border-right: 1px solid var(--ink-border);
+  background: var(--vscode-sideBar-background, var(--ink-bg));
+  padding: 10px 8px 24px;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+#outline.is-collapsed {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+.outline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--ink-border);
+}
+.outline-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+#outline-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.outline-item {
+  display: block;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: var(--ink-fg);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+  transition: background 0.1s ease;
+}
+.outline-item:hover {
+  background: var(--ink-btn-hover);
+}
+.outline-item.level-1 { padding-left: 6px; font-weight: 600; }
+.outline-item.level-2 { padding-left: 18px; }
+.outline-item.level-3 { padding-left: 30px; font-size: 12px; color: var(--ink-muted); }
+.outline-item.level-4 { padding-left: 42px; font-size: 12px; color: var(--ink-muted); }
+.outline-item.level-5,
+.outline-item.level-6 { padding-left: 54px; font-size: 11px; color: var(--ink-muted); }
+
 #scroll {
   flex: 1 1 auto;
   overflow: auto;
   position: relative;
-  padding: 24px 32px 96px;
+  /* padding 移到 #content，让 canvas 能覆盖整个视口（含 padding 区域）。 */
 }
 
 #content {
   position: relative;
   max-width: 880px;
   margin: 0 auto;
+  padding: 24px 32px 120px;
+  box-sizing: border-box;
 }
 
 #markdown {
@@ -381,4 +460,56 @@ body[data-mode='hand'] #ink-canvas {
 .hint.is-hidden {
   opacity: 0;
   pointer-events: none;
+}
+
+/* --------------------------- 代码语法高亮 --------------------------- */
+/* 简化的 hljs 主题，适配 VSCode 明暗。 */
+
+.hljs {
+  color: var(--ink-fg);
+  background: transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--ink-muted);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-name,
+.hljs-tag {
+  color: #c678dd;
+}
+.hljs-string,
+.hljs-attr,
+.hljs-symbol,
+.hljs-attribute {
+  color: #98c379;
+}
+.hljs-number,
+.hljs-literal {
+  color: #d19a66;
+}
+.hljs-title,
+.hljs-section,
+.hljs-title.function_ {
+  color: #61afef;
+}
+.hljs-variable,
+.hljs-template-variable {
+  color: #e06c75;
+}
+.hljs-type,
+.hljs-class .hljs-title {
+  color: #e5c07b;
+}
+.hljs-meta {
+  color: var(--ink-muted);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: bold;
 }

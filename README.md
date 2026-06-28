@@ -7,7 +7,7 @@
 [![made with typescript](https://img.shields.io/badge/made%20with-typescript-3178c6?logo=typescript&logoColor=white&style=for-the-badge&format=png)](https://www.typescriptlang.org/)
 [![built with love](https://img.shields.io/badge/built%20with-love-ff69b4?style=for-the-badge&format=png)](https://github.com/Nijika-jia/ScribbleMD)
 [![VS Code Engine](https://img.shields.io/badge/VS%20Code-1.74%2B-0078D4?style=for-the-badge&logo=visualstudiocode&logoColor=white&format=png)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-1.0.2-blue?style=for-the-badge&format=png)](./package.json)
+[![Version](https://img.shields.io/badge/version-1.0.4-blue?style=for-the-badge&format=png)](./package.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&format=png)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge&format=png)](https://github.com/Nijika-jia/ScribbleMD/issues)
 
@@ -23,7 +23,6 @@ ScribbleMD 给你在 VS Code 里看 Markdown 时随手画两笔的能力。打�
 - 显隐正文：临时切到纯墨迹视图
 - 一键刷新：源文件改了之后重新抓取快照，墨迹保留
 - 自动持久化：防抖 350ms 落盘，不会因为忘存而丢画
-- 明暗主题自适应：所有颜色走 VSCode 主题变量
 
 ![demo](https://pic1.imgdb.cn/item/6a3fa9942546dff76d1d74a5.gif)
 ## 快速开始

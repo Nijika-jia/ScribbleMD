@@ -35,7 +35,8 @@ export interface InkDocument {
 export type ToExtensionMessage =
   | { type: 'ready' }
   | { type: 'save'; ink: InkDocument }
-  | { type: 'request-refresh' };
+  | { type: 'request-refresh' }
+  | { type: 'open-link'; href: string };
 
 /** Extension → Webview 的消息。 */
 export type ToWebviewMessage =

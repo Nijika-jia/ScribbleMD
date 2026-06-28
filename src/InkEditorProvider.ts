@@ -121,6 +121,10 @@ export class InkEditorProvider implements vscode.Disposable {
             );
             break;
           }
+          case 'open-link': {
+            void this.openLink(uri, msg.href);
+            break;
+          }
         }
       },
       null,
@@ -194,6 +198,29 @@ export class InkEditorProvider implements vscode.Disposable {
     await fs.promises.writeFile(file, JSON.stringify(ink, null, 2), 'utf8');
   }
 
+  /** 处理 webview 里的链接点击：相对路径在 VSCode 中打开，http/https 用外部浏览器。 */
+  private async openLink(sourceUri: vscode.Uri, href: string): Promise<void> {
+    // http/https/mailto → 外部浏览器。
+    if (/^(https?|mailto):/i.test(href)) {
+      await vscode.env.openExternal(vscode.Uri.parse(href));
+      return;
+    }
+    // 锚点（#xxx）→ 忽略，webview 内滚动由前端处理（暂不支持）。
+    if (href.startsWith('#')) {
+      return;
+    }
+    // 相对/绝对路径 → 解析为文件 URI，在 VSCode 中打开。
+    const dir = path.dirname(sourceUri.fsPath);
+    const targetPath = path.isAbsolute(href) ? href : path.resolve(dir, href);
+    const targetUri = vscode.Uri.file(targetPath);
+    try {
+      await fs.promises.access(targetPath);
+      await vscode.commands.executeCommand('vscode.open', targetUri);
+    } catch {
+      vscode.window.showWarningMessage(`ScribbleMD: 找不到文件 ${href}`);
+    }
+  }
+
   /** 生成 Webview HTML，含严格 CSP、nonce、脚本引用与内联关键布局样式。 */
   private getHtml(webview: vscode.Webview): string {
     const nonce = getNonce();
@@ -215,17 +242,34 @@ export class InkEditorProvider implements vscode.Disposable {
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;height:100%;overflow:hidden}
     body{display:flex;flex-direction:column}
-    #toolbar{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid rgba(128,128,128,.25);user-select:none}
-    #scroll{flex:1 1 auto;overflow:auto;padding:24px 32px 96px}
-    #content{position:relative;max-width:880px;margin:0 auto}
+    #toolbar{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid rgba(128,128,128,.25);user-select:none;z-index:10}
+    #main-area{flex:1 1 auto;display:flex;overflow:hidden;min-height:0;position:relative}
+    #outline{position:absolute;top:0;left:0;bottom:0;width:240px;z-index:5;overflow:auto;border-right:1px solid rgba(128,128,128,.25);padding:10px 8px 24px;box-shadow:4px 0 12px rgba(0,0,0,.15);transform:translateX(0);opacity:1;pointer-events:auto;transition:transform .18s ease,opacity .18s ease}
+    #outline.is-collapsed{transform:translateX(-100%);opacity:0;pointer-events:none}
+    #outline-nav{display:flex;flex-direction:column;gap:1px}
+    .outline-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px;margin-bottom:4px;border-bottom:1px solid rgba(128,128,128,.25)}
+    .outline-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+    .outline-item{display:block;padding:3px 6px;border-radius:3px;font-size:13px;border:none;background:none;text-align:left;width:100%;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:inherit}
+    .outline-item:hover{background:rgba(128,128,128,.2)}
+    #scroll{flex:1 1 auto;overflow:auto;position:relative}
+    #content{position:relative;max-width:880px;margin:0 auto;padding:24px 32px 120px}
     #markdown{line-height:1.7}
     #ink-canvas{position:absolute;top:0;left:0;touch-action:none;pointer-events:auto}
     body[data-mode='hand'] #ink-canvas{pointer-events:none}
     .hint.is-hidden{opacity:0;pointer-events:none}
+    .icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;line-height:0}
+    .icon svg{width:18px;height:18px;display:block}
+    button{appearance:none;border:1px solid transparent;background:rgba(128,128,128,.15);color:inherit;padding:4px 8px;min-width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:13px;line-height:1}
+    button:hover{background:rgba(128,128,128,.25)}
+    button.is-active{background:#0e639c;color:#fff;border-color:#0e639c}
   </style>
 </head>
 <body data-mode="pen">
   <div id="toolbar">
+    <div class="group" role="group" aria-label="视图">
+      <button id="outline-toggle" class="is-active" title="大纲（显示/隐藏）"><i class="icon" data-icon="panel-left"></i></button>
+    </div>
+
     <div class="group" role="group" aria-label="工具">
       <button class="tool is-active" data-tool="pen" title="钢笔（P）"><i class="icon" data-icon="pen"></i></button>
       <button class="tool" data-tool="highlighter" title="高亮笔（H）"><i class="icon" data-icon="highlighter"></i></button>
@@ -265,10 +309,18 @@ export class InkEditorProvider implements vscode.Disposable {
     </div>
   </div>
 
-  <div id="scroll">
-    <div id="content">
-      <div id="markdown" class="markdown-body"></div>
-      <canvas id="ink-canvas"></canvas>
+  <div id="main-area">
+    <aside id="outline">
+      <div class="outline-header">
+        <span class="outline-title">大纲</span>
+      </div>
+      <nav id="outline-nav"></nav>
+    </aside>
+    <div id="scroll">
+      <div id="content">
+        <div id="markdown" class="markdown-body"></div>
+        <canvas id="ink-canvas"></canvas>
+      </div>
     </div>
   </div>
 

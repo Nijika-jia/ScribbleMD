@@ -2,6 +2,7 @@
  * 负责：Markdown 渲染（冻结快照）+ 透明手写 Canvas + 工具栏交互 + 持久化通信。
  */
 import MarkdownIt from 'markdown-it';
+import hljs from 'highlight.js/lib/common';
 import cssText from './styles.css';
 import {
   InkDocument,
@@ -39,6 +40,8 @@ const ICONS: Record<string, string> = {
   eye: svg('<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'),
   'eye-off': svg('<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>'),
   refresh: svg('<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>'),
+  list: svg('<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>'),
+  'panel-left': svg('<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>'),
 };
 
 function paintIcons(): void {
@@ -57,6 +60,16 @@ const md = new MarkdownIt({
   linkify: true,
   breaks: true,
   typographer: true,
+  highlight(code: string, lang: string): string {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return `<pre class="hljs"><code>${hljs.highlight(code, { language: lang }).value}</code></pre>`;
+      } catch {
+        /* fallback */
+      }
+    }
+    return `<pre class="hljs"><code>${md.utils.escapeHtml(code)}</code></pre>`;
+  },
 });
 
 let strokes: InkStroke[] = [];
@@ -88,19 +101,22 @@ const presetsEl = $('#presets')!;
 const cursorEl = $('#cursor')!;
 const toolbarEl = $('#toolbar')!;
 const scrollEl = $('#scroll')!;
+const outlineEl = $('#outline')!;
+const outlineNav = $('#outline-nav')!;
+const outlineToggleBtn = $('#outline-toggle')!;
 
 /* --------------------------- Markdown 渲染 --------------------------- */
 
 function renderMarkdown(text: string): void {
   markdownEl.innerHTML = md.render(text);
-  // 让链接外开（webview 内无法直接导航）。
+  // 链接点击：交给扩展端打开（webview 内无法直接导航）。
+  // 相对路径文件链接 → 在 VSCode 中打开新标签页；http/https → 外部浏览器。
   markdownEl.querySelectorAll('a[href]').forEach((a) => {
     a.addEventListener('click', (e) => {
       e.preventDefault();
       const href = (a as HTMLAnchorElement).getAttribute('href') || '';
       if (href) {
-        vscode.postMessage({ type: 'ready' }); // 占位，避免误用
-        window.open(href, '_blank');
+        vscode.postMessage({ type: 'open-link', href });
       }
     });
   });
@@ -108,8 +124,59 @@ function renderMarkdown(text: string): void {
   markdownEl.querySelectorAll('img').forEach((img) => {
     img.addEventListener('load', resizeCanvas);
   });
+  buildOutline();
   resizeCanvas();
 }
+
+/* ----------------------------- 大纲生成 ----------------------------- */
+
+/** 转义标题文本用于生成 id（只保留字母数字和中文，其余替换为 -）。 */
+function slugify(s: string): string {
+  return s.replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase();
+}
+
+/** 解析 markdown 中所有标题，生成大纲导航。点击跳转到对应标题。 */
+function buildOutline(): void {
+  const heads = markdownEl.querySelectorAll<HTMLHeadingElement>(
+    'h1, h2, h3, h4, h5, h6',
+  );
+  // 清空旧大纲。
+  outlineNav.innerHTML = '';
+  if (heads.length === 0) {
+    outlineEl.classList.add('is-collapsed');
+    outlineToggleBtn.classList.remove('is-active');
+    return;
+  }
+  // 自动展开（如果之前不是手动收起的状态）。
+  if (!outlineManuallyCollapsed) {
+    outlineEl.classList.remove('is-collapsed');
+    outlineToggleBtn.classList.add('is-active');
+  }
+  heads.forEach((h, i) => {
+    const level = Number(h.tagName[1]);
+    if (!h.id) {
+      h.id = `h-${i}-${slugify(h.textContent || '')}`;
+    }
+    const item = document.createElement('button');
+    item.className = `outline-item level-${level}`;
+    item.textContent = h.textContent || '(无标题)';
+    item.title = h.textContent || '';
+    item.addEventListener('click', () => {
+      // 平滑滚动到标题位置（减去一点顶部偏移，避免标题贴顶）。
+      const targetTop = h.offsetTop - 12;
+      scrollEl.scrollTo({ top: targetTop, behavior: 'smooth' });
+    });
+    outlineNav.appendChild(item);
+  });
+}
+
+let outlineManuallyCollapsed = false;
+outlineToggleBtn.addEventListener('click', () => {
+  outlineManuallyCollapsed = !outlineManuallyCollapsed;
+  outlineEl.classList.toggle('is-collapsed', outlineManuallyCollapsed);
+  outlineToggleBtn.classList.toggle('is-active', !outlineManuallyCollapsed);
+  // 大纲是浮层，不改变 #content 宽度，笔迹不会错位，无需 resizeCanvas。
+});
 
 /* --------------------------- Canvas 尺寸 ---------------------------- */
 
